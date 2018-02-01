@@ -50,6 +50,7 @@ $(if($IncludeDeleteClause) {"`nWHEN NOT MATCHED BY SOURCE THEN DELETE /* Use wit
 "@
     Write-Output $MergeTemplate
 }
-
+<#
 Clear-Host
 Get-SQLMergeStatement -TargetTableName dbo.ServiceRemarkCode -JoinColumns ImportKey, CodeListQualifierCode -MergeColumns ServicePaymentId,BtsInterchangeId,ImportKey,CodeListQualifierCode,RemarkCode -IncludeDeleteClause
+#>
