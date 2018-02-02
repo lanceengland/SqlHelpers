@@ -73,7 +73,7 @@ MERGE INTO $TargetTableName WITH (HOLDLOCK) AS TGT
 
 WHEN NOT MATCHED BY TARGET THEN
     INSERT (
-        $($MergeColumns -join ",`n        "
+        $($MergeColumns -join ",`n        ")
     )
     VALUES (
         $(($MergeColumns |ForEach-Object { "SRC.$_" }) -join ",`n        ")
