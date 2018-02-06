@@ -1,4 +1,4 @@
-﻿function Get-SQLMergeStatement {
+﻿function Get-SqlMergeStatement {
     <#
         .SYNOPSIS
             Generates and returns T-SQL MERGE statement.
@@ -27,42 +27,47 @@
             Blog: http://lance-england.com
 
         .EXAMPLE
-            Get-SQLMergeStatement -TargetTableName Tbl -JoinColumns a -MergeColumns a,b,c
+            Get-SqlMergeStatement -TargetTableName Tbl -JoinColumns a -MergeColumns a,b,c
 
             Merges columns a, b, c into Tbl ON column a
 
         .EXAMPLE
-            Get-SQLMergeStatement -TargetTableName Tbl -JoinColumns a, b -MergeColumns a,b,c,d
+            Get-SqlMergeStatement -TargetTableName Tbl -JoinColumns a, b -MergeColumns a,b,c,d
 
             Merges columns a, b, c, d into Tbl ON columns a and b
         
         .EXAMPLE
-            Get-SQLMergeStatement -TargetTableName Tbl -JoinColumns a, b -MergeColumns a,b,c,d -IncludeDeleteClause
+            Get-SqlMergeStatement -TargetTableName Tbl -JoinColumns a, b -MergeColumns a,b,c,d -IncludeDeleteClause
 
             Merges columns a, b, c, d into Tbl ON columns a and b. Includes the DELETE clause.
     #>
+
+    [CmdletBinding()]
+    [OutputType([psobject])]
     param
     (
         [Parameter( Mandatory=$True,
-                    ValueFromPipeline=$False,
-                    ValueFromPipelineByPropertyName=$False,
+                    ValueFromPipeline=$True,
+                    ValueFromPipelineByPropertyName=$True,
                     HelpMessage='Name of table to MERGE into')]
         [string] $TargetTableName,
 
         [Parameter( Mandatory=$True,
-                    ValueFromPipeline=$False,
-                    ValueFromPipelineByPropertyName=$False,
+                    ValueFromPipeline=$True,
+                    ValueFromPipelineByPropertyName=$True,
                     HelpMessage='Comma-separated list of columns to merge')]
         [string[]] $MergeColumns,
 
         [Parameter( Mandatory=$True,
-                    ValueFromPipeline=$False,
-                    ValueFromPipelineByPropertyName=$False,
+                    ValueFromPipeline=$True,
+                    ValueFromPipelineByPropertyName=$True,
                     HelpMessage='Comma-separated list of columns to JOIN on')]
         [string[]] $JoinColumns,
         
+        [Parameter(HelpMessage='When present, the DELETE clause is included in the MERGE (default is off)')]
         [switch]$IncludeDeleteClause
     )
+    process {
 $MergeTemplate = @"
 WITH SRC AS 
 ( 
@@ -90,6 +95,6 @@ THEN
 $(if($IncludeDeleteClause) {"`nWHEN NOT MATCHED BY SOURCE THEN DELETE /* Use with caution! This will delete anything in the target table not found in the source query. */"})
 ;
 "@
-
-    Write-Output $MergeTemplate
+        Write-Output $MergeTemplate
+    }
 }
