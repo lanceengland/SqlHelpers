@@ -43,7 +43,7 @@
     #>
 
     [CmdletBinding()]
-    [OutputType([psobject])]
+    [OutputType([string])]
     param
     (
         [Parameter( Mandatory=$True,
