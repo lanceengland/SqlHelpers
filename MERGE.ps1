@@ -63,7 +63,13 @@
                     ValueFromPipelineByPropertyName=$True,
                     HelpMessage='Comma-separated list of columns to JOIN on')]
         [string[]] $JoinColumns,
-        
+
+        [Parameter( Mandatory=$False,
+                    ValueFromPipeline=$True,
+                    ValueFromPipelineByPropertyName=$True,
+                    HelpMessage='String literal used to indent the output code e.g.  the tab-literal or spaces. Default is 4 spaces.')]
+        [string] $Indention = '    ',
+
         [Parameter(HelpMessage='When present, the DELETE clause is included in the MERGE (default is off)')]
         [switch]$IncludeDeleteClause
     )
@@ -71,27 +77,27 @@
 $MergeTemplate = @"
 WITH SRC AS 
 ( 
-    /* your source query here */ 
+$($Indention)/* your source query here */ 
 )
 MERGE INTO $TargetTableName WITH (HOLDLOCK) AS TGT
-    USING SRC ON ($(($JoinColumns |ForEach-Object { "SRC.$_ = TGT.$_" }) -join " AND "))
+$($Indention)USING SRC ON ($(($JoinColumns |ForEach-Object { "SRC.$_ = TGT.$_" }) -join " AND "))
 
 WHEN NOT MATCHED BY TARGET THEN
-    INSERT (
-        $($MergeColumns -join ",`n        ")
-    )
-    VALUES (
-        $(($MergeColumns |ForEach-Object { "SRC.$_" }) -join ",`n        ")
-    )
+$($Indention)INSERT (
+$($Indention)$($Indention)$($MergeColumns -join ",`n$Indention$Indention")
+$($Indention))
+$($Indention)VALUES (
+$($Indention)$($Indention)$(($MergeColumns |ForEach-Object { "SRC.$_" }) -join ",`n$Indention$Indention")
+$($Indention))
 
 WHEN MATCHED AND EXISTS (
-    SELECT $(($MergeColumns |Where-Object { $JoinColumns -notcontains $_ } |ForEach-Object { "SRC.$_" }) -join ", ") 
-    EXCEPT 
-    SELECT $(($MergeColumns |Where-Object { $JoinColumns -notcontains $_ } |ForEach-Object { "TGT.$_" }) -join ", ")
-    ) 
+$($Indention)SELECT $(($MergeColumns |Where-Object { $JoinColumns -notcontains $_ } |ForEach-Object { "SRC.$_" }) -join ", ") 
+$($Indention)EXCEPT 
+$($Indention)SELECT $(($MergeColumns |Where-Object { $JoinColumns -notcontains $_ } |ForEach-Object { "TGT.$_" }) -join ", ")
+$($Indention)) 
 THEN
-    UPDATE SET 
-    $(($MergeColumns |Where-Object { $JoinColumns -notcontains $_ } |ForEach-Object { "$_ = SRC.$_" }) -join ",`n    ")
+$($Indention)UPDATE SET 
+$($Indention)$(($MergeColumns |Where-Object { $JoinColumns -notcontains $_ } |ForEach-Object { "$_ = SRC.$_" }) -join ",`n$Indention")
 $(if($IncludeDeleteClause) {"`nWHEN NOT MATCHED BY SOURCE THEN DELETE /* Use with caution! This will delete anything in the target table not found in the source query. */"})
 ;
 "@
